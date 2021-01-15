@@ -1,0 +1,10 @@
+{
+  "Name": "AutoTrasher",
+  "Author": "Jag3Dagster",
+  "Version": "0.2.3",
+  "Description": "Allow the user to automatically remove 'trash' items",
+  "UniqueID": "Jag3Dagster.AutoTrasher",
+  "EntryDll": "AutoTrasher.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": [] 
+}
