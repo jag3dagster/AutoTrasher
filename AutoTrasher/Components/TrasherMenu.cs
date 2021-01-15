@@ -66,7 +66,7 @@ namespace AutoTrasher.Components
 
 		private void GenerateTrashListMenu()
 		{
-			Config.TrashItems
+			//Config.TrashItems
 		}
 
 		private void GenerateOptionsMenu()
