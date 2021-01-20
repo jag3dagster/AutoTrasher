@@ -1,7 +1,7 @@
 {
   "Name": "AutoTrasher",
   "Author": "Jag3Dagster",
-  "Version": "0.2.3",
+  "Version": "0.3.0",
   "Description": "Allow the user to automatically remove 'trash' items",
   "UniqueID": "Jag3Dagster.AutoTrasher",
   "EntryDll": "AutoTrasher.dll",

@@ -24,8 +24,34 @@ namespace AutoTrasher
 		{
 			Config = helper.ReadConfig<ModConfig>();
 
-			helper.Events.Player.InventoryChanged += this.OnInventoryChanged;
+			//helper.Events.Player.InventoryChanged += this.OnInventoryChanged;
+			helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
 			helper.Events.Input.ButtonPressed += this.OnButtonPressed;
+		}
+
+		private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
+		{
+			if (Game1.hudMessages.Count == 0) return;
+
+			foreach (var message in Game1.hudMessages)
+			{
+				var item = this.Helper.Reflection.GetField<Item>(message, "messageSubject") as Object;
+
+				if (item == null || !Config.TrashItems.Contains(item.Name)) continue;
+
+				var player = Game1.player;
+				if (Config.UseShippingBin)
+				{
+					message.Message = $"Auto-sent {item.DisplayName} x{item.Stack} to the shipping bin";
+					MoveItemToShippingBin(player, item);
+				}
+				else
+				{
+					var reclamationPrice = RemoveItemFromInventory(player, item);
+					message.Message = $"Auto-trashed {item.DisplayName} x{item.Stack}" +
+									(reclamationPrice > 0 ? $" and received {reclamationPrice} coin(s)" : "");
+				}
+			}
 		}
 
 		/// <summary>
@@ -215,10 +241,10 @@ namespace AutoTrasher
 			Game1.getFarm().lastItemShipped = item;
 			Game1.soundBank.PlayCue("Ship");
 
-			var notifMessage = $"Auto-sent {item.DisplayName} x{item.Stack} to the shipping bin";
+			//var notifMessage = $"Auto-sent {item.DisplayName} x{item.Stack} to the shipping bin";
 
-			Monitor.Log(notifMessage);
-			Game1.addHUDMessage(new HUDMessage(notifMessage, null));
+			//Monitor.Log(notifMessage);
+			//Game1.addHUDMessage(new HUDMessage(notifMessage, null));
 		}
 
 		/// <summary>
@@ -226,7 +252,7 @@ namespace AutoTrasher
 		/// </summary>
 		/// <param name="player"><see cref="Farmer"/> to be removing the <paramref name="item"/> from</param>
 		/// <param name="item"><see cref="Item"/> to be moved to the shipping bin from the <paramref name="player"/>'s inventory</param>
-		private void RemoveItemFromInventory(Farmer player, Item item)
+		private int RemoveItemFromInventory(Farmer player, Item item)
 		{
 			var reclamationPrice = Utility.getTrashReclamationPrice(item, player);
 
@@ -239,11 +265,13 @@ namespace AutoTrasher
 			player.removeItemFromInventory(item);
 			Game1.soundBank.PlayCue("trashcan");
 
-			var notifMessage = $"Auto-trashed {item.DisplayName} x{item.Stack}" +
-				(reclamationPrice > 0 ? $" and received {reclamationPrice} coin(s)" : "");
+			return reclamationPrice;
 
-			Monitor.Log(notifMessage);
-			Game1.addHUDMessage(new HUDMessage(notifMessage, null));
+			//var notifMessage = $"Auto-trashed {item.DisplayName} x{item.Stack}" +
+			//	(reclamationPrice > 0 ? $" and received {reclamationPrice} coin(s)" : "");
+
+			//Monitor.Log(notifMessage);
+			//Game1.addHUDMessage(new HUDMessage(notifMessage, null));
 		}
 	}
 }
