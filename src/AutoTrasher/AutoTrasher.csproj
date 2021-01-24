@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="Components\TrasherMenu.cs" />
     <Compile Include="Helpers\CustomHUDMessage.cs" />
+    <Compile Include="Helpers\Utilities.cs" />
     <Compile Include="ModConfig.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

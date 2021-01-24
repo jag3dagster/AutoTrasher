@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using AutoTrasher.Helpers;
 using Microsoft.Xna.Framework.Input;
 
 using StardewModdingAPI;
@@ -25,32 +26,44 @@ namespace AutoTrasher
 			Config = helper.ReadConfig<ModConfig>();
 
 			//helper.Events.Player.InventoryChanged += this.OnInventoryChanged;
-			helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
-			helper.Events.Input.ButtonPressed += this.OnButtonPressed;
+			helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+			helper.Events.Input.ButtonPressed += OnButtonPressed;
 		}
 
 		private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
 		{
 			if (Game1.hudMessages.Count == 0) return;
 
-			foreach (var message in Game1.hudMessages)
-			{
-				var item = this.Helper.Reflection.GetField<Item>(message, "messageSubject") as Object;
+			var localMessages = Game1.hudMessages.ToList();
 
-				if (item == null || !Config.TrashItems.Contains(item.Name)) continue;
+			foreach (var message in localMessages)
+			{
+				if (message is CustomHUDMessage) continue;
+
+				var item = Helper.Reflection.GetField<Item>(message, "messageSubject")?.GetValue() as Object;
+				var subjectName = item?.Name;
+
+				if (item == null || !Config.TrashItems.Contains(subjectName)) continue;
+
+				Game1.hudMessages.Remove(message);
+				var cMessage = new CustomHUDMessage(null, item.Stack, message.add, message.color, item);
 
 				var player = Game1.player;
+				var itemStack = item.Stack == 1 ? "" : $" x{item.Stack}";
+
 				if (Config.UseShippingBin)
 				{
-					message.Message = $"Auto-sent {item.DisplayName} x{item.Stack} to the shipping bin";
+					cMessage.CMessage = $"Auto-sent {item.DisplayName}{itemStack} to the shipping bin";
 					MoveItemToShippingBin(player, item);
 				}
 				else
 				{
 					var reclamationPrice = RemoveItemFromInventory(player, item);
-					message.Message = $"Auto-trashed {item.DisplayName} x{item.Stack}" +
-									(reclamationPrice > 0 ? $" and received {reclamationPrice} coin(s)" : "");
+					cMessage.CMessage = $"Auto-trashed {item.DisplayName}{itemStack}" +
+						(reclamationPrice > 0 ? $" and received {reclamationPrice} coin(s)" : "");
 				}
+
+				Game1.hudMessages.Add(cMessage);
 			}
 		}
 
@@ -241,7 +254,7 @@ namespace AutoTrasher
 			Game1.getFarm().lastItemShipped = item;
 			Game1.soundBank.PlayCue("Ship");
 
-			//var notifMessage = $"Auto-sent {item.DisplayName} x{item.Stack} to the shipping bin";
+			var notifMessage = $"Auto-sent {item.DisplayName} x{item.Stack} to the shipping bin";
 
 			//Monitor.Log(notifMessage);
 			//Game1.addHUDMessage(new HUDMessage(notifMessage, null));
